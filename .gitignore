@@ -1,0 +1,70 @@
+# Python bytecode files
+*.pyc
+*.pyo
+__pycache__/
+
+# Virtual environment
+env/
+venv/
+ENV/
+venv.bak/
+
+# Distribution / packaging
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+
+# Django-specific
+db.sqlite3
+*.log
+*.pot
+*.pyc
+*.mo
+media/
+staticfiles/
+
+# Local environment settings
+.env
+*.local
+
+# IDE-specific files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Test and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Jupyter notebooks
+.ipynb_checkpoints
+
+# macOS system files
+.DS_Store
+
+# Windows system files
+Thumbs.db
+
+# Docker-related
+*.pid
+*.seed
+*.pid.lock
+
+# Node.js files
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Backup and temporary files
+*.bak
+*.backup
+*.swp
+*.swo
+*.tmp
+
+.env
