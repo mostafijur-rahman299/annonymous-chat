@@ -38,6 +38,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -49,6 +50,8 @@ INSTALLED_APPS = [
     'rest_framework',
 
     # custom apps
+    'chat',
+    'core',
 ]
 
 MIDDLEWARE = [
@@ -79,7 +82,8 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'annonymous_chat.wsgi.application'
+# WSGI_APPLICATION = 'annonymous_chat.wsgi.application'
+ASGI_APPLICATION = 'annonymous_chat.asgi.application'
 
 
 # Database
@@ -94,6 +98,18 @@ DATABASES = {
         'HOST': env('POSTGRES_HOST'),
         'PORT': env('POSTGRES_PORT'),
     }
+}
+
+REDIS_HOST = env('REDIS_HOST', default="redis")
+REDIS_PORT = env('REDIS_PORT', default=6379)
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [(REDIS_HOST, REDIS_PORT)],
+        },
+    },
 }
 
 
