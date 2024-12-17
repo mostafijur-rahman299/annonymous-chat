@@ -3,11 +3,20 @@ from utils.custom_func import generate_random_string
 
 
 class ChatRoom(models.Model):
+
+    # Participants Format: {
+    #     "participant_id": {
+    #         "nickname": "nickname",
+    #         "is_admin": "boolean"
+    #     }
+    # }
+
     # Unique identifier for the chat room
     room_code = models.CharField(max_length=10, unique=True, null=True, blank=True)  # Unique room code
-    is_active = models.BooleanField(default=True)  # Marks if the chat room is still active
     participants = models.JSONField(null=True, blank=True)  # Store participant identifiers and their nicknames
     created_at = models.DateTimeField(auto_now_add=True)  # When the chat room was created
+    is_active = models.BooleanField(default=True)  # Marks if the chat room is still active
+    is_private = models.BooleanField(default=False)  # Marks if the chat room is private
 
     def __str__(self):
         return f"Room: {self.room_code}"
@@ -20,12 +29,15 @@ class ChatRoom(models.Model):
                 self.room_code = generate_random_string(length=10)  # Regenerate if the code already exists
         super().save(*args, **kwargs)
 
-    def add_participant(self, participant_id, nickname):
+    def add_participant(self, participant_id, nickname, is_admin=False):
         # Add participant ID with their nickname to the participants list
         if self.participants is None:
             self.participants = {}
         if participant_id not in self.participants:
-            self.participants[participant_id] = nickname
+            self.participants[participant_id] = {
+                "nickname": nickname,
+                "is_admin": is_admin
+            }
             self.save()
 
     def remove_participant(self, participant_id):
