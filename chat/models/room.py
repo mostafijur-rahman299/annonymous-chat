@@ -12,7 +12,7 @@ class ChatRoom(models.Model):
     # }
 
     # Unique identifier for the chat room
-    room_code = models.CharField(max_length=10, unique=True, null=True, blank=True)  # Unique room code
+    room_code = models.CharField(max_length=200, unique=True, null=True, blank=True)  # Unique room code
     participants = models.JSONField(null=True, blank=True)  # Store participant identifiers and their nicknames
     created_at = models.DateTimeField(auto_now_add=True)  # When the chat room was created
     is_active = models.BooleanField(default=True)  # Marks if the chat room is still active

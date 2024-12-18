@@ -6,9 +6,10 @@ class ChatMessage(models.Model):
     room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, null=False, related_name="messages")
     
     # Sender and receiver identifiers (anonymous, no need for real numbers)
-    sender_id = models.CharField(max_length=50, null=True, blank=True)  # Unique ID for sender
+    sender_id = models.CharField(max_length=200, null=True, blank=True)  # Unique ID for sender
     # User's nickname for display purposes
     sender_nickname = models.CharField(max_length=255, null=True, blank=True)  # Display name for the sender
+    sender_role = models.CharField(max_length=255, null=True, blank=True)  # Display name for the sender
 
     # Message content
     message_text = models.TextField(max_length=1000, null=True, blank=True)

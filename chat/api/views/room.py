@@ -45,7 +45,8 @@ class CreateChatRoomView(APIView):
             "data": {
                 "room_code": room.room_code,
                 "participant_id": participant_id,
-                "nickname": room.participants[participant_id]["nickname"]
+                "nickname": room.participants[participant_id]["nickname"],
+                "role": "host"
             }
         }, status=status.HTTP_201_CREATED)
 
@@ -80,9 +81,9 @@ class JoinChatRoomView(APIView):
         if len(room.participants) >= room.max_participants:
             return Response({
                 "success": False, 
-                "message": f"Room is full", 
+                "message": f"Room is full. Maximum {room.max_participants} participants allowed.", 
                 "error": {
-                    "room_code": f"Room is full"
+                    "room_code": f"Room is full. Maximum {room.max_participants} participants allowed."
                 }
             }, status=status.HTTP_400_BAD_REQUEST)
 
@@ -130,8 +131,9 @@ class JoinChatRoomView(APIView):
             "message": "Joined room successfully", 
             "data": {
                 "room_code": room.room_code,
-                "room_id": room.id,
-                "nickname": nickname
+                "participant_id": participant_id,
+                "nickname": nickname,
+                "role": "guest"
             }
         }, status=status.HTTP_200_OK)
 
