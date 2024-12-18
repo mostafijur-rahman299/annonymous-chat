@@ -33,17 +33,19 @@ class CreateChatRoomView(APIView):
         # Add the participant to the room
 
         # Generate unique user id
-        user_id = uuid.uuid4()
+        participant_id = random.randint(1000000000, 9999999999)
+        room.save()
 
         # Add the participant to the room
-        room.add_participant(user_id, nickname)
+        room.add_participant(participant_id, nickname, "host")
 
         return Response({
-            "success": True, 
+            "success": True,
             "message": "Room created successfully", 
             "data": {
                 "room_code": room.room_code,
-                "room_id": room.id
+                "participant_id": participant_id,
+                "nickname": room.participants[participant_id]["nickname"]
             }
         }, status=status.HTTP_201_CREATED)
 
@@ -75,31 +77,53 @@ class JoinChatRoomView(APIView):
             }, status=status.HTTP_404_NOT_FOUND)
         
         # Check if the room is private and already has 2 participants
-        if room.is_private and len(room.participants) >= 2:
+        if len(room.participants) >= room.max_participants:
             return Response({
                 "success": False, 
-                "message": "Room is private and already has 2 participants", 
+                "message": f"Room is full", 
                 "error": {
-                    "room_code": "Room is private and already has 2 participants"
+                    "room_code": f"Room is full"
                 }
             }, status=status.HTTP_400_BAD_REQUEST)
 
         # If nickname is provided then check this would be unique for this room
         if nickname:
-            if room.participants and nickname in room.participants.values():
+            # Check if the nickname is already in use
+            nicknames = [participant["nickname"].lower() for participant in room.participants.values()]
+            if nickname.lower() in nicknames:
+
+                # Generate a suggested nickname
+                suggested_nickname = f"{nickname}{random.randint(1000, 9999)}"
+                while suggested_nickname.lower() in nicknames:
+                    suggested_nickname = f"{nickname}{random.randint(1000, 9999)}"
+
                 return Response({
                     "success": False, 
                     "message": "Nickname already in use", 
                     "error": {
-                        "nickname": "Nickname already in use"
+                        "nickname": "Nickname already in use. Please try a different nickname. Suggested nickname: " + suggested_nickname
                     }
                 }, status=status.HTTP_400_BAD_REQUEST)
 
         if not nickname:
             nickname = f"Anonymous{random.randint(1000, 9999)}"
 
+        # Check if the room is full
+        if len(room.participants) >= room.max_participants:
+            return Response({
+                "success": False, 
+                "message": f"Room is private and already has {room.max_participants} participants", 
+                "error": {
+                    "room_code": f"Room is private and already has {room.max_participants} participants"
+                }
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         # Add the participant to the room
-        room.add_participant(request.user.id, nickname)
+        participant_id = random.randint(1000000000, 9999999999)
+        while room.participants.get(participant_id):
+            participant_id = random.randint(1000000000, 9999999999)
+
+        room.add_participant(participant_id, nickname)
 
         return Response({
             "success": True, 
