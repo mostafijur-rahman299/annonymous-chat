@@ -135,3 +135,9 @@ class JoinChatRoomView(APIView):
             }
         }, status=status.HTTP_200_OK)
 
+
+class ParticipantList(APIView):
+    def get(self, request, room_code, format=None):
+        room = ChatRoom.objects.filter(room_code=room_code).first()
+        participants = room.participants
+        return Response(participants, status=status.HTTP_200_OK)

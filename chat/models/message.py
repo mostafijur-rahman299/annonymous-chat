@@ -7,7 +7,6 @@ class ChatMessage(models.Model):
     
     # Sender and receiver identifiers (anonymous, no need for real numbers)
     sender_id = models.CharField(max_length=50, null=True, blank=True)  # Unique ID for sender
-    receiver_id = models.CharField(max_length=50, null=True, blank=True)  # Unique ID for receiver
     # User's nickname for display purposes
     sender_nickname = models.CharField(max_length=255, null=True, blank=True)  # Display name for the sender
 
