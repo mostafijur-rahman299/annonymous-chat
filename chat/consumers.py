@@ -55,6 +55,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         message_text = text_data_json['message']
+        message_tmp_id = text_data_json['message_tmp_id']
         
         message = await sync_to_async(ChatMessage.objects.create)(
             room=self.room,
@@ -71,6 +72,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'type': 'new_message',
                 'message': {
                     'id': message.id,
+                    'message_tmp_id': message_tmp_id,
                     'message_text': message.message_text,
                     'created_at': message.created_at.strftime(
                         "%H:%M:%S %p"
@@ -94,6 +96,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'response_type': 'new_message',
             'id': message['id'],
+            'message_tmp_id': message['message_tmp_id'],
             'message_text': message['message_text'],
             'created_at': message['created_at'],
             'sender': sender,
