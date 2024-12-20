@@ -2,6 +2,13 @@ from django.db import models
 from chat.models import ChatRoom
 
 class ChatMessage(models.Model):
+
+    _STATUS = (
+        ('delivered', 'Delivered'),
+        ('read', 'Read'),
+        ('deleted', 'Deleted'),
+    )
+
     # Link to the chat room
     room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, null=False, related_name="messages")
     
@@ -13,6 +20,7 @@ class ChatMessage(models.Model):
 
     # Message content
     message_text = models.TextField(max_length=1000, null=True, blank=True)
+    status = models.CharField(max_length=255, default="delivered", choices=_STATUS)
        
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)  # Message creation timestamp
