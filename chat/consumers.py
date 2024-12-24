@@ -15,17 +15,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
         try:
             self.room = await sync_to_async(ChatRoom.objects.get)(room_code=room_code)
         except ChatRoom.DoesNotExist:
+            print("Room not found")
             self.send({
-                'type': 'websocket.close',
-                'code': 404,
-                'reason': 'Room not found'
+                'type': 'error',
+                'error': 'Room not found'
             })
             return
         except Exception as e:
             self.send({
-                'type': 'websocket.close',
-                'code': 500,
-                'reason': 'Internal server error'
+                'type': 'error',
+                'error': 'Internal server error'
             })
             return
         
@@ -33,9 +32,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.participant = self.room.participants.get(self.participant_id)
         if not self.participant:
             self.send({
-                'type': 'websocket.close',
-                'code': 404,
-                'reason': 'You are not a participant of this room'
+                'type': 'error',
+                'error': 'You are not a participant of this room'
             })
             return
         
@@ -54,38 +52,66 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # Receive message from WebSocket
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        message_text = text_data_json['message']
-        message_tmp_id = text_data_json['message_tmp_id']
-        
-        message = await sync_to_async(ChatMessage.objects.create)(
-            room=self.room,
-            sender_id=self.participant_id,
-            sender_nickname=self.participant.get("nickname"),
-            sender_role=self.participant.get("role"),
-            message_text=message_text
-        )
+        command = text_data_json['command']
 
-        # Send the message to the group
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'new_message',
-                'message': {
-                    'id': message.id,
-                    'message_tmp_id': message_tmp_id,
-                    'message_text': message.message_text,
-                    'created_at': message.created_at.strftime(
-                        "%H:%M:%S %p"
-                    ),
-                    'status': message.status
-                },
-                'sender': { 
-                    'id': self.participant_id,
-                    'nickname': self.participant.get("nickname"),
-                    'role': self.participant.get("role")
+        if command == 'send_message':
+            message_text = text_data_json['message']
+            message_tmp_id = text_data_json['message_tmp_id']
+            
+            message = await sync_to_async(ChatMessage.objects.create)(
+                room=self.room,
+                sender_id=self.participant_id,
+                sender_nickname=self.participant.get("nickname"),
+                sender_role=self.participant.get("role"),
+                message_text=message_text
+            )
+
+            # Send the message to the group
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'new_message',
+                    'message': {
+                        'id': message.id,
+                        'message_tmp_id': message_tmp_id,
+                        'message_text': message.message_text,
+                        'created_at': message.created_at.strftime(
+                            "%H:%M:%S %p"
+                        ),
+                        'status': message.status
+                    },
+                    'sender': { 
+                        'id': self.participant_id,
+                        'nickname': self.participant.get("nickname"),
+                        'role': self.participant.get("role")
+                    }
                 }
-            }
-        )
+            )
+        elif command == 'leave_room':
+            participant = self.room.participants.get(self.participant_id)
+            if participant.get("role") == "host":
+                await sync_to_async(self.room.delete)()
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'host_dismiss_room'
+                    }
+                )
+            else:
+                await sync_to_async(self.room.remove_participant)(self.participant_id)
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'participant_toggled',
+                        'response_type': 'leave_participant',
+                        'participant': {
+                            'participant_id': self.participant_id,
+                            'nickname': self.participant.get("nickname"),
+                            'role': self.participant.get("role")
+                        }
+                    }
+                )
+
 
     # Receive message from room group
     async def new_message(self, event):
@@ -101,6 +127,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'created_at': message['created_at'],
             'sender': sender,
             'status': message['status']
+        }))
+
+    async def host_dismiss_room(self, event):
+        await self.send(text_data=json.dumps({
+            'response_type': 'host_dismiss_room'
+        }))
+
+    async def error(self, event):
+        await self.send(text_data=json.dumps({
+            'response_type': 'error',
+            'error': event['error']
+        }))
+
+    async def participant_toggled(self, event):
+        await self.send(text_data=json.dumps({
+            'response_type': event['response_type'],
+            'participant': event['participant']
         }))
 
     async def disconnect(self, close_code):

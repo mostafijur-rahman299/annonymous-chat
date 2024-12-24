@@ -1,9 +1,10 @@
 import random
-import uuid
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from chat.models.room import ChatRoom
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 
 class CreateChatRoomView(APIView):
@@ -126,6 +127,20 @@ class JoinChatRoomView(APIView):
 
         room.add_participant(participant_id, nickname)
 
+        # Socket notification to all participants
+        async_to_sync(get_channel_layer().group_send)(
+            f'chat_{room.room_code}',
+            {
+                "type": "participant_toggled",
+                "response_type": "join_participant",
+                "participant": {
+                    "participant_id": participant_id,
+                    "nickname": nickname,
+                    "role": "guest"
+                }
+            }
+        )
+
         return Response({
             "success": True, 
             "message": "Joined room successfully", 
@@ -141,5 +156,13 @@ class JoinChatRoomView(APIView):
 class ParticipantList(APIView):
     def get(self, request, room_code, format=None):
         room = ChatRoom.objects.filter(room_code=room_code).first()
+        if not room:
+            return Response({
+                "success": False, 
+                "message": "Room not found", 
+                "error": {
+                    "room_code": "Room not found"
+                }
+            }, status=status.HTTP_404_NOT_FOUND)
         participants = room.participants
         return Response(participants, status=status.HTTP_200_OK)

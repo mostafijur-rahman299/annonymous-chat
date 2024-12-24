@@ -16,7 +16,7 @@ class ChatRoom(models.Model):
     participants = models.JSONField(null=True, blank=True)  # Store participant identifiers and their nicknames
     created_at = models.DateTimeField(auto_now_add=True)  # When the chat room was created
     is_active = models.BooleanField(default=True)  # Marks if the chat room is still active
-    max_participants = models.IntegerField(default=2)  # Maximum number of participants in the room
+    max_participants = models.IntegerField(default=10)  # Maximum number of participants in the room
 
     def __str__(self):
         return f"Room: {self.room_code}"
