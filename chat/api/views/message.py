@@ -6,6 +6,7 @@ from chat.models import ChatMessage
 
 class MessageList(APIView):
     def get(self, request, room_code, format=None):
+        timezone = request.GET.get('timezone', None)
         messages = ChatMessage.objects.filter(room__room_code=room_code)
-        serializer = MessageSerializer(messages, many=True)
+        serializer = MessageSerializer(messages, many=True, context={'timezone': timezone})
         return Response(serializer.data, status=status.HTTP_200_OK)

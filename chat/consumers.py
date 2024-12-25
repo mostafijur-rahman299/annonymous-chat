@@ -75,9 +75,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         'id': message.id,
                         'message_tmp_id': message_tmp_id,
                         'message_text': message.message_text,
-                        'created_at': message.created_at.strftime(
-                            "%H:%M:%S %p"
-                        ),
+                        'created_at': str(message.created_at),
                         'status': message.status
                     },
                     'sender': { 
