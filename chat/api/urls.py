@@ -1,5 +1,5 @@
 from django.urls import path
-from .views.room import CreateChatRoomView, JoinChatRoomView, ParticipantList
+from .views.room import CreateChatRoomView, JoinChatRoomView, ParticipantList, RoomInfoView
 from .views.message import MessageList
 
 urlpatterns = [
@@ -7,4 +7,5 @@ urlpatterns = [
     path('join-room/', JoinChatRoomView.as_view(), name='join_chat_room'),
     path('room-participants/<str:room_code>/', ParticipantList.as_view(), name='participant_list'),
     path('room-messages/<str:room_code>/', MessageList.as_view(), name='message_list'),
+    path('room-info/<str:room_code>/', RoomInfoView.as_view(), name='room_info'),
 ]

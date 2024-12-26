@@ -11,6 +11,7 @@ class CreateChatRoomView(APIView):
     def post(self, request, format=None):
         room_code = request.data.get('room_code')
         nickname = request.data.get('nickname')
+        expiration_duration = request.data.get('expiration_duration')
 
         # Check if the room code is provided
         if room_code:
@@ -35,10 +36,16 @@ class CreateChatRoomView(APIView):
 
         # Generate unique user id
         participant_id = random.randint(1000000000, 9999999999)
-        room.save()
 
         # Add the participant to the room
         room.add_participant(participant_id, nickname, "host")
+
+        # Set the expiration time
+        room.set_expiration_time(expiration_duration)
+        room.expiration_duration = expiration_duration
+
+        # Save the room
+        room.save()
 
         return Response({
             "success": True,
@@ -50,7 +57,6 @@ class CreateChatRoomView(APIView):
                 "role": "host"
             }
         }, status=status.HTTP_201_CREATED)
-
 
 
 class JoinChatRoomView(APIView):
@@ -166,3 +172,13 @@ class ParticipantList(APIView):
             }, status=status.HTTP_404_NOT_FOUND)
         participants = room.participants
         return Response(participants, status=status.HTTP_200_OK)
+
+
+class RoomInfoView(APIView):
+    def get(self, request, room_code, format=None):
+        room = ChatRoom.objects.filter(room_code=room_code).first()
+        room_info = {
+            "max_participants": room.max_participants,
+            "expiration_duration": room.get_expiration_time()
+        }
+        return Response(room_info, status=status.HTTP_200_OK)

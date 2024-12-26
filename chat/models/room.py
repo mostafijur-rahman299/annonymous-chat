@@ -1,8 +1,7 @@
-from datetime import timedelta, timezone
+from datetime import timedelta
 from django.db import models
 from utils.custom_func import generate_random_string
-from django.utils.timesince import timesince
-
+from django.utils import timezone
 class ChatRoom(models.Model):
 
     # Participants Format: {
@@ -12,12 +11,6 @@ class ChatRoom(models.Model):
     #     }
     # }
 
-    expiration_duration_unit_options = [
-        ('minutes', 'Minutes'),
-        ('hours', 'Hours'),
-        ('days', 'Days'),
-    ]
-
     # Unique identifier for the chat room
     room_code = models.CharField(max_length=200, unique=True, null=True, blank=True)  # Unique room code
     participants = models.JSONField(null=True, blank=True)  # Store participant identifiers and their nicknames
@@ -25,8 +18,7 @@ class ChatRoom(models.Model):
     is_active = models.BooleanField(default=True)  # Marks if the chat room is still active
     max_participants = models.IntegerField(default=10)  # Maximum number of participants in the room
     expiration_time = models.DateTimeField(null=True, blank=True)  # When the chat room expires
-    expiration_duration = models.IntegerField(default=5)  # Duration in minutes
-    expiration_duration_unit = models.CharField(max_length=20, default="minutes", choices=expiration_duration_unit_options)  # Unit of duration
+    expiration_duration = models.IntegerField(default=10, null=True, blank=True)  # Duration in minutes
     
 
     def __str__(self):
@@ -62,17 +54,11 @@ class ChatRoom(models.Model):
             self.participants[participant_id]["nickname"] = nickname
             self.save()
 
-    def set_expiration_time(self):
+    def set_expiration_time(self, duration):
         # Set the expiration time based on the duration and unit
-        if self.expiration_duration and self.expiration_duration_unit:
-            duration = self.expiration_duration
-            unit = self.expiration_duration_unit
-            if unit == 'minutes':
-                self.expiration_time = timezone.now() + timedelta(minutes=duration)
-            elif unit == 'hours':
-                self.expiration_time = timezone.now() + timedelta(hours=duration)
-            elif unit == 'days':
-                self.expiration_time = timezone.now() + timedelta(days=duration)
+        if duration:
+            duration = int(duration)
+            self.expiration_time = timezone.now() + timedelta(minutes=duration)
             self.save()
 
     def is_expired(self):
@@ -86,6 +72,6 @@ class ChatRoom(models.Model):
         if self.expiration_time:
             delta = self.expiration_time - timezone.now()
             if delta.total_seconds() > 0:
-                return f"{delta.days} days, {delta.seconds // 3600} hours remaining"
-            return "Expired"
-        return "No expiration set"
+                return int(delta.total_seconds() // 60)
+            return 0
+        return 0
