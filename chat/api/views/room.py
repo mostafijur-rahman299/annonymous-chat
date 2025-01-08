@@ -5,6 +5,9 @@ from rest_framework import status
 from chat.models.room import ChatRoom
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+from chat.utils import generate_dh_keys
+
 
 
 class CreateChatRoomView(APIView):
@@ -54,7 +57,7 @@ class CreateChatRoomView(APIView):
                 "room_code": room.room_code,
                 "participant_id": participant_id,
                 "nickname": room.participants[participant_id]["nickname"],
-                "role": "host"
+                "role": "host",
             }
         }, status=status.HTTP_201_CREATED)
 
@@ -154,10 +157,9 @@ class JoinChatRoomView(APIView):
                 "room_code": room.room_code,
                 "participant_id": participant_id,
                 "nickname": nickname,
-                "role": "guest"
+                "role": "guest",
             }
         }, status=status.HTTP_200_OK)
-
 
 class ParticipantList(APIView):
     def get(self, request, room_code, format=None):
