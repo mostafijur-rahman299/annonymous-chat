@@ -42,6 +42,7 @@ class CreateChatRoomView(APIView):
 
         # Add the participant to the room
         room.add_participant(participant_id, nickname, "host")
+        room.admin_id = participant_id
 
         # Set the expiration time
         room.set_expiration_time(expiration_duration)
@@ -66,6 +67,7 @@ class JoinChatRoomView(APIView):
     def post(self, request, format=None):
         room_code = request.data.get('room_code')
         nickname = request.data.get('nickname')
+        rsa_public_key = request.data.get('rsa_public_key')
 
         # Check if the room code is provided
         if not room_code:

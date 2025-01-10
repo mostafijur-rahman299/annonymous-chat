@@ -10,6 +10,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         room_code = self.scope['url_route']['kwargs']['room_code']
         self.participant_id = self.scope['query_string'].decode('utf-8').split('=')[1]
         self.room_group_name = f'chat_{room_code}'
+        self.participant_personal_group_name = f'chat_{room_code}_{self.participant_id}'
 
         # Check if the room exists, if not, create it
         try:
@@ -43,6 +44,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Join the room group (WebSocket broadcast group)
         await self.channel_layer.group_add(
             self.room_group_name,
+            self.channel_name
+        )
+
+        # Join the participant personal group
+        await self.channel_layer.group_add(
+            self.participant_personal_group_name,
             self.channel_name
         )
 
