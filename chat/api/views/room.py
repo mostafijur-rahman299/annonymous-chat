@@ -152,6 +152,18 @@ class JoinChatRoomView(APIView):
             }
         )
 
+        # Socket notification to the host
+        async_to_sync(get_channel_layer().group_send)(
+            f'chat_{room.room_code}_{room.admin_id}',
+            {
+                "type": "new_participant_join_notification_to_host",
+                "participant": {
+                    "participant_id": participant_id,
+                    "rsa_public_key": rsa_public_key
+                }
+            }
+        )
+
         return Response({
             "success": True, 
             "message": "Joined room successfully", 

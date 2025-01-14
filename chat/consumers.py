@@ -116,7 +116,25 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         }
                     }
                 )
+        elif command == 'send_group_key':
+            group_key = text_data_json['group_key']
+            participant_id = text_data_json['participant_id']
+            room_code = text_data_json['room_code']
 
+            await self.channel_layer.group_send(
+                f'chat_{room_code}_{participant_id}',
+                {
+                    'type': 'group_msg_encryption_key',
+                    'group_key': group_key
+                }
+            )
+
+    async def group_msg_encryption_key(self, event):
+        group_key = event['group_key']
+        await self.send(text_data=json.dumps({
+            'response_type': 'group_msg_encryption_key',
+            'group_key': group_key
+        }))
 
     # Receive message from room group
     async def new_message(self, event):
@@ -156,3 +174,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             self.channel_name
         )
+
+    async def new_participant_join_notification_to_host(self, event):
+        await self.send(text_data=json.dumps({
+            'response_type': 'new_participant_join_notification_to_host',
+            'participant': event['participant'],
+        }))
