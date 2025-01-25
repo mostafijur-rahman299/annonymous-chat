@@ -14,6 +14,9 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
+    libatlas-base-dev \
+    liblapack-dev \
+    libblas-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copy only the requirements file to leverage Docker cache
@@ -23,9 +26,6 @@ COPY requirements.txt .
 # Combining pip install commands to reduce layers
 # Using --no-cache-dir to avoid storing unnecessary files
 RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
-
-# Download the spaCy model after installing spaCy
-RUN python -m spacy download en_core_web_sm
 
 # Second stage: Final runtime stage
 FROM python:3.11-slim AS runtime
